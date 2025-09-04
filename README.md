@@ -8,6 +8,12 @@ Install the required dependencies using [pixi](https://pixi.sh/latest/):
 pixi init --manifest-path pyproject.toml
 ```
 
+And add the `agno` framework using:
+
+```shell
+pixi run pip install -U agno
+```
+
 ## Agent Projects
 
 ⚠️ Under Construction 🛠️

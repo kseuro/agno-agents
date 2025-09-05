@@ -10,8 +10,10 @@ pixi init --manifest-path pyproject.toml
 
 And add the `agno` framework using:
 
+TODO: convert this into a requirements list
+
 ```shell
-pixi run pip install -U agno
+pixi run pip install -U agno ddgs duckduckgo-search sqlalchemy openai
 ```
 
 ## Agent Projects

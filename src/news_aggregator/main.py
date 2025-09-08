@@ -1,48 +1,58 @@
-from agno.agent import Agent
-from agno.models.google import Gemini
-from agno.tools.duckduckgo import DuckDuckGoTools
-from agno.storage.sqlite import SqliteStorage
-from pydantic import BaseModel, Field
+# from agno.agent import Agent
+# from agno.models.google import Gemini
+# from agno.tools.duckduckgo import DuckDuckGoTools
+# from agno.storage.sqlite import SqliteStorage
+# from pydantic import BaseModel, Field
+
+import os
+import sys
 from dotenv import dotenv_values
 from typing import List
-
-environment_config = dotenv_values(".env")
+from src.news_aggregator.database import DataBase
+from src.news_aggregator.news import NewsAPI
 
 # TODO: Build off of this framework:
 # https://github.com/agno-agi/agno/blob/main/cookbook/workflows/hackernews_reporter.py
 
-model_id = "gemini-2.0-flash-lite"
-description = "You help first-time bakers find success in the kitchen. When given a recipe request, search for recipes online and extract the key information including ingredients, equipment, instructions, and tips. Always provide complete recipe information."  # noqa
-prompt = "Find 3 popular chocolate chip cookie recipe and provide the ingredients, equipment, instructions, and tips."
 
+if __name__ == "__main__":
+    which: str = "everything"  # TODO: headlines, both
+    keywords: List[str] | str = "nvidia"
+    language: str = "en"
+    sort_by: str = "relevancy"
+    n_articles: int | None = 10
 
-class Recipe(BaseModel):
-    name: str = Field(..., description="The name of the recipe.")
-    ingredients: List[str] = Field(
-        ..., description="Ingredients required to successfully make what the recipe describes."
-    )
-    equipment: List[str] = Field(..., description="All of the equipment required to prepare the recipe.")
-    instructions: List[str] = Field(..., description="The steps required to prepare the recipe.")
-    tips_for_success: List[str] = Field(..., description="Any tips that could help improve the outcome.")
+    environment_config = dotenv_values(".env")
+    GEMINI_API_KEY = environment_config.get("GEMINI_API_KEY", None)
+    NEWS_API_KEY = environment_config.get("NEWS_API_KEY", None)
 
+    if not NEWS_API_KEY:
+        NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+        sys.exit("Please set the `NEWS_API_KEY`.")
 
-class RecipeCollection(BaseModel):
-    recipes: List[Recipe] = Field(..., description="A list of recipes that match the search criteria.")
-    total_count: int = Field(..., description="Total number of recipes found.")
-    search_query: str = Field(..., description="The original search query used to find these recipes.")
+    # TODO: Implement gemini checks (provider, model, etc)
+    # if not GEMINI_API_KEY:
+    #     sys.exit("Please set the `GEMINI_API_KEY`.")
+    # GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    # model_id = "gemini-2.0-flash-lite"
 
+    database = DataBase()
+    cached = database.get_cached_articles(which, keywords)
+    if cached is not None:
+        articles = cached
+        print(f"Retrieved {len(articles)} articles from cache for ({which},{keywords}) combination")
+    else:
+        newsapi = NewsAPI(api_key=NEWS_API_KEY, language=language)
+        if which == "everything" and keywords:  # take a look at just the news for these keywords
+            articles = newsapi.get_everything_by_keyword(keywords=keywords)
+            articles = articles[:n_articles]
+            database.set_cached_articles(which, keywords, articles)
+        elif which == "headlines":
+            # TODO: aggregate the top headlines and generate a report
+            print("`headlines` not yet implemented.")
+        elif which == "all":
+            print("`all` aggregation not yet implemented.")
+            # TODO: Generate a report about the top stories related to the provided keywords.
+            # TODO: Generate a report about the top news stories happening right now.
 
-agent = Agent(
-    model=Gemini(id=model_id, api_key=environment_config["GEMINI_API_KEY"]),
-    tools=[DuckDuckGoTools()],
-    show_tool_calls=True,
-    description=description,
-    response_model=RecipeCollection,
-    storage=SqliteStorage(
-        table_name="recipe_data",
-        db_file="tmp/recipes.db",
-        auto_upgrade_schema=True,
-    ),
-)
-
-agent.print_response(prompt, stream=True)
+    # TODO: Agent workflow here

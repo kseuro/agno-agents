@@ -3,7 +3,10 @@ from typing import List, Dict
 
 
 class NewsAPI:
-    """Wrapper class for the NewsApiClient."""
+    """Wrapper class for the NewsApiClient.
+
+    Documentation: https://newsapi.org/docs/client-libraries/python
+    """
 
     def __init__(self, api_key: str, language: str = "en"):
         self.api = NewsApiClient(api_key=api_key)

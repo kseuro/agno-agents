@@ -20,6 +20,7 @@ platforms = ["osx-arm64"]
 agno-agents = { path = ".", editable = true }
 
 [tool.pixi.tasks]
+news = "pixi run python src/news_aggregator/main.py"
 
 [tool.pixi.dependencies]
 python = "3.11.*"
@@ -27,3 +28,4 @@ pre-commit = ">=4.3.0,<5"
 google-genai = ">=1.33.0,<2"
 pip = ">=25.2,<26"
 python-dotenv = ">=1.1.1,<2"
+requests = ">=2.32.5,<3"

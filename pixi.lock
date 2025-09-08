@@ -90,7 +90,7 @@ packages:
 - pypi: ./
   name: agno-agents
   version: 0.1.0
-  sha256: 25b95d09694653e9cbeed79b18f2b5d75b495a70fa1c1f53c37a7a8bee1c3e72
+  sha256: 602c02c458f4103cb857b25bd7bcf93901cda2f76f028f9aa5159e1a9df045c2
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/aiohappyeyeballs-2.6.1-pyhd8ed1ab_0.conda
@@ -847,7 +847,7 @@ packages:
   license: Apache-2.0
   license_family: APACHE
   purls:
-  - pkg:pypi/requests?source=compressed-mapping
+  - pkg:pypi/requests?source=hash-mapping
   size: 59263
   timestamp: 1755614348400
 - conda: https://conda.anaconda.org/conda-forge/noarch/rsa-4.9.1-pyhd8ed1ab_0.conda

@@ -13,7 +13,7 @@ And add the `agno` framework using:
 TODO: convert this into a requirements list
 
 ```shell
-pixi run pip install -U agno ddgs duckduckgo-search sqlalchemy openai
+pixi run pip install -U agno ddgs duckduckgo-search sqlalchemy openai newsapi-python
 ```
 
 ## Agent Projects

@@ -52,6 +52,7 @@ def get_command_line_args() -> Dict[str, Any]:
         "-n",
         "--n-articles",
         type=int,
+        default=None,
         help="Number of articles to gather.",
     )
     args = parser.parse_args()
@@ -66,6 +67,14 @@ def get_command_line_args() -> Dict[str, Any]:
     else:
         raw = input("Enter keywords (comma-separated): ").strip()
         keywords = [k.strip() for k in raw.split(",") if k.strip()]
+
+    if not args.n_articles:
+        raw = input("Enter the number of articles to search for: ").strip()
+        n_articles = int(raw)
+        if n_articles <= 0:
+            print("The number of articles must be greater than zero, defaulting to 2.")
+            n_articles = 2
+        return {"keywords": keywords, "n_articles": n_articles}
 
     return {"keywords": keywords, "n_articles": args.n_articles}
 
@@ -113,15 +122,16 @@ def news_workflow_execution_function(workflow: Workflow, *, execution_input: Wor
     news_analyst = Agent(
         name="news_analyst",
         model=Gemini(id=MODEL_ID, api_key=GEMINI_API_KEY),
-        role=dedent(
-            """
-        You are a seasoned information analyst who is deft at the task of synthesizing information
-        from multiple sources into a coherent narrative. A junior news gathering agent will provide you with summaries
-        of current news stories from which you'll generate a meta-analysis. Feel free to search the web for any
-        additional context or information that might enrich your analysis.
-        """
-        ),
-        tools=[DuckDuckGoTools(search=True)],
+        role="You are a seasoned information analyst who is deft at synthesizing information",
+        instructions=[
+            "A junior news gathering agent will provide you with summaries of current news stories",
+            "Use these news stories to generate a meta-analysis that provides a brief overview of the salient details.",
+            "Feel free to search the web for any additonal context or information that might enrich the analysis",
+            "Write the analysis in markdown format to the local file system.",
+        ],
+        tools=[
+            DuckDuckGoTools(search=True),
+        ],
         response_model=Analysis,
     )
     news_stories = "\n\n".join([story.summary for story in news_stories.content.stories])
@@ -132,22 +142,21 @@ def news_workflow_execution_function(workflow: Workflow, *, execution_input: Wor
     directions that might be spurred by what has been occurring in the news recently. If any of the preceeding analysis
     topics are not relevant to the subject matter, then omit them from your analysis.
 
+    IMPORTANT: Format your response as markdown with a main heading "# Analysis: {keywords}" and include the analysis below it.
+
     News Stories:
     {news_stories}
-    """
+    """  # noqa
     )
     response = news_analyst.run(news_prompt)
 
-    # -- Write the output file --
-    analysis: Analysis = response.content.analysis
+    # # -- Write the output file --
+    analysis: str = response.content.analysis
     outfile_path = Path(__file__).absolute().parent
-    outfile_name = f"{'-'.join(keywords.split(', '))}_analysis.txt"
-    outfile_name = outfile_path / outfile_name
-    print(f"Writing analysis to: {outfile_name.name}")
-    with open(outfile_name, "w") as outfile:
-        lines = analysis.strip().split("\n\n")
-        for line in lines:
-            outfile.write(f"{line}\n")
+    outfile_name = f"{'-'.join(keywords.split(', '))}_analysis.md".replace(" ", "-")
+    outfile = outfile_path / outfile_name
+    print(f"Writing analysis to: {outfile.name}")
+    outfile.write_text(analysis + "\n")
 
     return response
 

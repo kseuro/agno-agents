@@ -1,17 +1,33 @@
+import os
+import argparse
+from pathlib import Path
 from textwrap import dedent
 from agno.agent import Agent
 from agno.models.google import Gemini
 from agno.tools.duckduckgo import DuckDuckGoTools
+from agno.workflow.v2.types import WorkflowExecutionInput
+from agno.workflow.v2.workflow import Workflow
 from pydantic import BaseModel, Field
 from dotenv import dotenv_values
-from typing import List
+from typing import List, Dict, Any
+
+environment_config = dotenv_values(".env")
+GEMINI_API_KEY = environment_config.get("GEMINI_API_KEY", os.getenv("GEMINI_API_KEY"))
+if not GEMINI_API_KEY:
+    raise ValueError("Set the `GEMINI_API_KEY`")
+MODEL_ID: str = "gemini-2.0-flash-lite"
+
+
+class NewsRequest(BaseModel):
+    keywords: List[str]
+    n_articles: int | None = 2
 
 
 class NewsStory(BaseModel):
     author_name: str = Field(..., description="The name of a story's author or authors.")
     publication_outlet: str = Field(..., description="Which outlet published the news story.")
     story_url: str = Field(..., description="The URL of the story.")
-    summary: str = Field(..., description="A summary of the story along with key points.")
+    summary: str = Field(..., description="A one paragraph summary of the story along with key points.")
 
 
 class NewsStories(BaseModel):
@@ -22,21 +38,56 @@ class Analysis(BaseModel):
     analysis: str = Field(..., description="Analysis of a collection of news stories.")
 
 
-if __name__ == "__main__":
-    n_articles: int | None = 2
+def get_command_line_args() -> Dict[str, Any]:
+    parser = argparse.ArgumentParser(description="News analysis workflow")
+    parser.add_argument(
+        "-k",
+        "--keyword",
+        "--keywords",
+        action="append",
+        help="Keyword to search for. Repeat the flag to add multiple (e.g., -k nvidia -k 'artificial intelligence'). "
+        "Alternatively, pass a comma-separated list in a single flag.",
+    )
+    parser.add_argument(
+        "-n",
+        "--n-articles",
+        type=int,
+        help="Number of articles to gather.",
+    )
+    args = parser.parse_args()
 
-    environment_config = dotenv_values(".env")
-    GEMINI_API_KEY = environment_config.get("GEMINI_API_KEY", None)
-    if not GEMINI_API_KEY:
-        raise ValueError("Set the `GEMINI_API_KEY`")
-    keywords: List[str] = ["nvidia", "artificial intelligence", "business"]
-    model_id: str = "gemini-2.0-flash-lite"
+    # Resolve keywords
+    keywords: List[str]
+    if args.keyword:
+        parts: List[str] = []
+        for item in args.keyword:
+            parts.extend([p.strip() for p in item.split(",") if p.strip()])
+        keywords = parts
+    else:
+        raw = input("Enter keywords (comma-separated): ").strip()
+        keywords = [k.strip() for k in raw.split(",") if k.strip()]
+
+    return {"keywords": keywords, "n_articles": args.n_articles}
+
+
+def news_workflow_execution_function(workflow: Workflow, *, execution_input: WorkflowExecutionInput):
+
+    assert isinstance(execution_input.message, NewsRequest), "`execution_input.message` must be a `NewsRequest`"
+
+    # -- Extract required inputs --
+    required = execution_input.message
+    keywords = " ".join(required.keywords)
+    n_articles = required.n_articles
+
+    assert n_articles and n_articles > 0, "Number of articles `n_articles` must be positive."
+
+    print(f"Running workflow: {workflow.name}")
 
     # --- Gather the news ---
-    print(f"Gathering news related to: {' '.join(keywords)}")
+    print(f"Gathering {n_articles} news related to: {', '.join(required.keywords)}")
     news_gathering = Agent(
         name="news_gathering",
-        model=Gemini(id=model_id, api_key=GEMINI_API_KEY),
+        model=Gemini(id=MODEL_ID, api_key=GEMINI_API_KEY),
         tools=[DuckDuckGoTools(search=True, news=True)],
         role="You are an experienced news gathering agent who scours the internet looking for the best stories.",
         instructions=[
@@ -44,16 +95,16 @@ if __name__ == "__main__":
             "Author Name",
             "Publication Outlet",
             "Story URL",
-            "A summary of the story along with key points",
+            "A concise one parapgraph summary of the story along with key points",
         ],
         response_model=NewsStories,
     )
     n_stories = "the top story" if n_articles == 1 else f"{n_articles} stories"
     prompt = dedent(
         f"""
-    Search the web for {n_stories} related to the following keywords:
-    {', '.join(keywords)}
-    """
+        Search the web for {n_stories} related to the following keywords:
+        {keywords}
+        """
     )
     news_stories = news_gathering.run(prompt)
 
@@ -61,12 +112,12 @@ if __name__ == "__main__":
     print("Analyzing the news.")
     news_analyst = Agent(
         name="news_analyst",
-        model=Gemini(id=model_id, api_key=GEMINI_API_KEY),
+        model=Gemini(id=MODEL_ID, api_key=GEMINI_API_KEY),
         role=dedent(
             """
         You are a seasoned information analyst who is deft at the task of synthesizing information
         from multiple sources into a coherent narrative. A junior news gathering agent will provide you with summaries
-        of current news stories from which you'll generate the meta-analysis. Feel free to search the web for any
+        of current news stories from which you'll generate a meta-analysis. Feel free to search the web for any
         additional context or information that might enrich your analysis.
         """
         ),
@@ -85,5 +136,29 @@ if __name__ == "__main__":
     {news_stories}
     """
     )
-    analysis = news_analyst.run(news_prompt)
-    print(analysis.content)
+    response = news_analyst.run(news_prompt)
+
+    # -- Write the output file --
+    analysis: Analysis = response.content.analysis
+    outfile_path = Path(__file__).absolute().parent
+    outfile_name = f"{'-'.join(keywords.split(', '))}_analysis.txt"
+    outfile_name = outfile_path / outfile_name
+    print(f"Writing analysis to: {outfile_name.name}")
+    with open(outfile_name, "w") as outfile:
+        lines = analysis.strip().split("\n\n")
+        for line in lines:
+            outfile.write(f"{line}\n")
+
+    return response
+
+
+if __name__ == "__main__":
+    args = get_command_line_args()
+    print("News Aggregation".center(80, "-"))
+    news_analysis_workflow = Workflow(
+        name="news_analysis_workflow",
+        description="Automated analysis of news related to keywords of the user's interest.",
+        steps=news_workflow_execution_function,
+    )
+    analysis = news_analysis_workflow.run(NewsRequest(**args))
+    [print("-" * 80) for _ in range(2)]

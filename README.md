@@ -18,9 +18,11 @@ pixi run pip install -U agno ddgs duckduckgo-search sqlalchemy openai
 
 ## Agent Projects
 
-✅: MVP
-⚠️: Under Construction
+| ✅ MVP                                             |
+| :------------------------------------------------ |
+| [News Aggregator](/src/news_aggregator/README.md) |
 
-✅ [News Aggregator](/src/news_aggregator/README.md)
-⚠️ [Document Q&A](/src/document_QA/README.md)
-⚠️ [AI Code Contributor](/src/ai_code_contributor/README.md)
+| ⚠️ Under Construction                                      |
+| :-------------------------------------------------------- |
+| [Document Q&A](/src/document_QA/README.md)                |
+| [AI Code Contributor](/src/ai_code_contributor/README.md) |

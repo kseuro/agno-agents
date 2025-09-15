@@ -53,3 +53,14 @@ response = agent.print_response(
     "What are some of the state of the art methods in computational protein design?",
     markdown=True,
 )
+
+# TODO: Provide a research objective (e.g. I want to find the best methods for protein docking)
+# TODO: Use an agent to generate a list of queries that are relevant to this objective
+# TODO: Search the arxiv for information related to the objective. Five articles per
+# TODO: For each article, distill an actionable summary.
+#       - Can the method / result in the paper be replicated from publicly available data?
+#       - Can the method / model be run without the use of high-end hardware (e.g. GPUs,TPUs)?
+# TODO: Use the summary information to rank the articles based on their relevance to the objective.
+# TODO: Using the most relevant articles, generate three quick prototype ideas for which we'll build an MVP
+#       - For each prototype, provide information on how we would sanity check or benchmark the method.
+# TODO: For each prototype, create a brief presentation outline that could be used to present each MVP to a journal club

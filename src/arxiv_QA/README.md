@@ -1,16 +1,14 @@
-# Document Q&A
+# Arxiv Q&A
 
-⚠️ Under Construction 🛠️
+⚠️ Under Construction
 
-An agent that can answer questions about a specific document, such as a research paper, a legal document, or a product manual.
-
-This projects showcases an agent's ability to work with unstructured data by leveraging `agno` knowledge and retieval features to load a document into a vector store and allow the agent to search for necessary documentation.
+An agent that can retrieve information from [arxiv](https://arxiv.org/) and answer user questions via local RAG.
 
 ## Usage
 
 ### Vector Database
 
-Start an instance of the required vector database by running:
+Install [Docker](https://docs.docker.com/get-started/get-docker/) on you system, then start an instance of the required vector database by running:
 
 ```shell
 docker run -d \
@@ -23,3 +21,7 @@ docker run -d \
   --name pgvector \
   agnohq/pgvector:16
 ```
+
+### Queries
+
+TODO

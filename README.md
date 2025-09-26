@@ -24,5 +24,5 @@ pixi run pip install -U agno ddgs duckduckgo-search sqlalchemy openai arxiv pgve
 
 | ⚠️ Under Construction                                      |
 | :-------------------------------------------------------- |
-| [Document Q&A](/src/arxiv_QA/README.md)                   |
+| [arXiv Q&A](/src/arxiv_QA/README.md)                      |
 | [AI Code Contributor](/src/ai_code_contributor/README.md) |

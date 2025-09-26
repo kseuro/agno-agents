@@ -66,6 +66,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/pydantic-2.11.7-pyh3cfb1c2_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pydantic-core-2.33.2-py311hf245fc6_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pyopenssl-25.1.0-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/pypdf-6.1.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/python-3.11.13-hc22306f_0_cpython.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/python-dotenv-1.1.1-pyhe01879c_0.conda
@@ -98,7 +99,7 @@ packages:
 - pypi: ./
   name: agno-agents
   version: 0.1.0
-  sha256: 95b9b575cd7cbd80ed0a912763071cf6d2c38374849e9c7a760513a8cf7cba6f
+  sha256: de95c9b882b6a8afce7d1501beef57a44f295f34f5ae95ddd4f6a3b4a685da19
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/aiohappyeyeballs-2.6.1-pyhd8ed1ab_0.conda
@@ -852,6 +853,19 @@ packages:
   - pkg:pypi/pyopenssl?source=hash-mapping
   size: 123256
   timestamp: 1747560884456
+- conda: https://conda.anaconda.org/conda-forge/noarch/pypdf-6.1.0-pyhcf101f3_0.conda
+  sha256: 5a4289b78a2a592fac42a164d9081b3525b79a6fa88c0ebc19fe477f4290782e
+  md5: 994981468bf0b2499fcc5967111aeae4
+  depends:
+  - python >=3.10
+  - typing_extensions >=4.0
+  - python
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/pypdf?source=hash-mapping
+  size: 264593
+  timestamp: 1758549250023
 - conda: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha55dd90_7.conda
   sha256: ba3b032fa52709ce0d9fd388f63d330a026754587a2f461117cac9ab73d8d0d8
   md5: 461219d1a5bd61342293efa2c0c90eac

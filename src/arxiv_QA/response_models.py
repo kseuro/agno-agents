@@ -81,3 +81,12 @@ class ArxivSearchResponse(BaseModel):
         parsed = [ArxivPaper.from_agno(it) for it in items]
         pdf_urls = [paper.pdf_url for paper in parsed]
         return cls(query=query, total_found=len(parsed), items=parsed, pdf_urls=pdf_urls)
+
+
+class ArticleSummary(BaseModel):
+    title: str = Field(..., description="Title of the paper, if available. Otherwise inferred.")
+    summary: str = Field(..., description="A concise abstract-level summary in 5-8 sentences.")
+    key_points: List[str] = Field(default_factory=list, description="3-7 bullte points of main contributions/findings.")
+    limitations: List[str] = Field(
+        default_factory=list, description="Known limitations, assumptions, or open questions."
+    )
